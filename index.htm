@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Operativo CEDI - Abel Ortiz</title>
+    <style>
+        :root {
+            --primary-blue: #0A2240;
+            --secondary-blue: #1A3C63;
+            --accent-green: #27AE60;
+            --p02-blue: #1E40AF; /* Azul marino profundo para P02 solicitado */
+            --accent-yellow: #F2C94C;
+            --accent-red: #EB5757;
+            --accent-purple: #9B51E0;
+            --accent-cyan: #2D9CDB;
+            --border-color: #D1D5DB;
+            --bg-body: #E5E7EB;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 450px);
+            /* Altura reducida de 400px a 500px según lo solicitado */
+            grid-template-rows: repeat(2, 470px); 
+            gap: 5px;
+            background: var(--bg-body);
+        }
+
+        .sheet {
+            background: white;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Se ha eliminado la clase .sheet-label que contenía "HOJA X" */
+
+        .sheet-header {
+            background: var(--primary-blue);
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sheet-header h2 {
+            margin: 0;
+            font-size: 15px;
+            text-transform: uppercase;
+        }
+
+        /* Clase para el nombre del coordinador solicitado */
+        .coordinator-name {
+            font-size: 10px;
+            color: #94A3B8;
+            margin-bottom: 2px;
+            text-transform: none;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 12px; /* Reducido ligeramente para ajustarse a la nueva altura */
+            flex-grow: 1;
+            font-size: 11px; /* Ligeramente más pequeño para optimizar espacio */
+            overflow: hidden;
+            color: #1F2937;
+        }
+
+        /* Hoja 1 */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .kpi-card {
+            border: 1px solid #eee;
+            padding: 8px;
+            text-align: center;
+            border-radius: 4px;
+            background: #F9FAFB;
+        }
+        .kpi-val { font-size: 18px; font-weight: bold; margin: 2px 0; }
+        .status-pill { font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: bold; display: inline-block; margin-top: 4px;}
+        .pill-process { background: #FEF3C7; color: #92400E; }
+        .pill-pending { background: #FEE2E2; color: #991B1B; }
+        
+        .chart-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            align-items: flex-end;
+        }
+
+        /* Tablas Generales */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            text-align: center;
+            color: #1F2937;
+        }
+        th, td {
+            border: 1px solid #E5E7EB;
+            padding: 5px 3px; /* Reducido ligeramente */
+        }
+        th { background: #F9FAFB; font-weight: bold; text-align: center; color: #374151; }
+        
+        /* Tabla Expandida (Hoja 2) */
+        .table-expanded {
+            font-size: 13px; /* Un poco más pequeña */
+        }
+        .table-expanded th, .table-expanded td {
+            padding: 10px 8px; /* Reducido considerablemente */
+        }
+        .table-expanded th {
+            background: var(--primary-blue);
+            color: white;
+            border: 1px solid var(--secondary-blue);
+        }
+        .table-expanded tbody tr:nth-child(even) {
+            background-color: #F9FAFB;
+        }
+        .icon-col {
+            font-size: 20px;
+            width: 40px;
+        }
+
+        /* Círculos de estado */
+        .dot { height: 11px; width: 11px; border-radius: 50%; display: inline-block; margin-left: 5px; vertical-align: middle; }
+        .dot-green { background: var(--accent-green); }
+        .dot-yellow { background: var(--accent-yellow); }
+        .dot-red { background: var(--accent-red); }
+
+        /* Avance Global (Hoja 3) */
+        .global-progress-item {
+            margin-bottom: 12px;
+        }
+        .global-progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: #1F2937;
+        }
+        .global-progress-bar-container {
+            background: #E5E7EB;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #D1D5DB;
+        }
+        .global-progress-fill {
+            height: 100%;
+        }
+
+        /* Bloqueadores */
+        .blocker-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding: 8px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background: #F9FAFB;
+        }
+        .icon-circle {
+            width: 32px; height: 32px; border-radius: 50%; background: var(--secondary-blue);
+            color: white; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0;
+            font-size: 15px;
+        }
+
+        .badge-red { background: var(--accent-red); color: white; padding: 3px 6px; border-radius: 3px; font-weight: bold; }
+        .badge-yellow { background: var(--accent-yellow); color: black; padding: 3px 6px; border-radius: 3px; font-weight: bold; }
+        
+        h3 { font-size: 14px; margin-top: 0; margin-bottom: 15px; color: var(--secondary-blue); border-bottom: 2px solid #E5E7EB; padding-bottom: 3px; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-grid">
+    
+    <div class="sheet">
+        <div class="sheet-header" style="flex-direction: column; align-items: flex-start;">
+            <div class="coordinator-name">Coordinador de entradas Abel Ortiz +504 3177-2371</div>
+            <h2>CRONOGRAMA DE AVANCE DE PROYECTOS OPERATIVOS</h2>
+        </div>
+        <div class="content">
+            <h3 style="margin-top: 0; color: var(--secondary-blue); border-bottom: 2px solid #E5E7EB; padding-bottom: 5px;">Resumen General (6 Proyectos)</h3>
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div style="color: var(--accent-green); font-size:10px; font-weight:bold;">Loc. Almacen</div>
+                    <div class="kpi-val">92%</div>
+                    <span class="status-pill pill-process">EN PROCESO</span>
+                </div>
+                <div class="kpi-card">
+                    <div style="color: var(--p02-blue); font-size:10px; font-weight:bold;">Pintura Pasillos</div>
+                    <div class="kpi-val">40%</div>
+                    <span class="status-pill pill-process">EN PROCESO</span>
+                </div>
+                <div class="kpi-card">
+                    <div style="color: var(--accent-purple); font-size:10px; font-weight:bold;">Pintura Delim.</div>
+                    <div class="kpi-val">98%</div>
+                    <span class="status-pill pill-process">EN PROCESO</span>
+                </div>
+                <div class="kpi-card">
+                    <div style="color: var(--accent-red); font-size:10px; font-weight:bold;">Extintores</div>
+                    <div class="kpi-val">56%</div>
+                    <span class="status-pill pill-process">EN PROCESO</span>
+                </div>
+                <div class="kpi-card">
+                    <div style="color: var(--accent-cyan); font-size:10px; font-weight:bold;">Rotulación</div>
+                    <div class="kpi-val">40%</div>
+                    <span class="status-pill pill-process">EN PROCESO</span>
+                </div>
+                <div class="kpi-card">
+                    <div style="color: #6B7280; font-size:10px; font-weight:bold;">Loc. Picking</div>
+                    <div class="kpi-val" style="color: var(--accent-red);">0%</div>
+                    <span class="status-pill pill-pending">PENDIENTE</span>
+                </div>
+            </div>
+            
+            <div class="chart-section">
+                <div style="width: 45%; text-align: center;">
+                    <h4 style="margin: 0 0 5px 0; color:#1F2937;">Avance General</h4>
+                    <div style="width: 90px; height: 90px; border-radius: 50%; border: 12px solid #E5E7EB; border-top-color: #2563EB; border-right-color: #2563EB; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                        <span style="font-size: 22px; font-weight: bold; color:#1F2937;">54%</span>
+                    </div>
+                    <p style="font-size: 10px; margin-top: 5px; color:#4B5563; font-weight:bold;">Promedio Total</p>
+                </div>
+                <div style="width: 50%;">
+                    <h4 style="margin: 0 0 5px 0; text-align:center; color:#1F2937;">Avance por Proyecto (%)</h4>
+                    <div style="display: flex; align-items: flex-end; justify-content: space-around; height: 90px; border-bottom: 2px solid #D1D5DB; padding-bottom: 5px;">
+                        <div style="background: var(--accent-green); width: 18px; height: 92%;"></div>
+                        <div style="background: var(--p02-blue); width: 18px; height: 40%;"></div>
+                        <div style="background: var(--accent-purple); width: 18px; height: 98%;"></div>
+                        <div style="background: var(--accent-red); width: 18px; height: 56%;"></div>
+                        <div style="background: var(--accent-cyan); width: 18px; height: 40%;"></div>
+                        <div style="background: #9CA3AF; width: 18px; height: 5%;"></div> </div>
+                    <div style="display: flex; justify-content: space-around; font-size: 9px; margin-top: 5px; font-weight:bold; color:#374151;">
+                        <span>P01</span><span>P02</span><span>P03</span><span>P04</span><span>P05</span><span>P06</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sheet" style="grid-column: span 2;">
+        <div class="content" style="padding: 15px;">
+            <h3>AVANCE DETALLADO POR PROYECTO</h3>
+            <table class="table-expanded">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th></th>
+                        <th style="text-align: left;">Proyecto</th>
+                        <th style="text-align: left;">Alcance</th>
+                        <th>Meta Total</th>
+                        <th>Unidad</th>
+                        <th>Completado</th>
+                        <th>% Avance</th>
+                        <th style="text-align: left;">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>P01</strong></td>
+                        <td class="icon-col">📍</td>
+                        <td style="text-align: left;"><strong>Localización almacen</strong></td>
+                        <td style="text-align: left;">Inventario por ubicaciones</td>
+                        <td>30,000</td>
+                        <td>ubicaciones</td>
+                        <td>27,565</td>
+                        <td style="color: var(--accent-green);"><strong>92%</strong></td>
+                        <td style="text-align: left;">En Proceso <span class="dot dot-green"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>P02</strong></td>
+                        <td class="icon-col">🖌️</td>
+                        <td style="text-align: left;"><strong>Pintura Pasillos</strong></td>
+                        <td style="text-align: left;">Pasillos principales</td>
+                        <td>1,500</td>
+                        <td>m²</td>
+                        <td>606.2</td>
+                        <td style="color: var(--p02-blue);"><strong>40%</strong></td>
+                        <td style="text-align: left;">En Proceso <span class="dot dot-yellow"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>P03</strong></td>
+                        <td class="icon-col">🟪</td>
+                        <td style="text-align: left;"><strong>Pintura delimitacion</strong></td>
+                        <td style="text-align: left;">Identificacion áreas</td>
+                        <td>6</td>
+                        <td>zonas</td>
+                        <td>5.9</td>
+                        <td style="color: var(--accent-green);"><strong>98%</strong></td>
+                        <td style="text-align: left;">En Proceso <span class="dot dot-green"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>P04</strong></td>
+                        <td class="icon-col">🧯</td>
+                        <td style="text-align: left;"><strong>Extintores</strong></td>
+                        <td style="text-align: left;">Pintura de bases</td>
+                        <td>27</td>
+                        <td>Bases</td>
+                        <td>15</td>
+                        <td style="color: var(--accent-yellow);"><strong>56%</strong></td>
+                        <td style="text-align: left;">En Proceso <span class="dot dot-yellow"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>P05</strong></td>
+                        <td class="icon-col">🪧</td>
+                        <td style="text-align: left;"><strong>Rotulcion de areas</strong></td>
+                        <td style="text-align: left;">Identificación áreas</td>
+                        <td>50</td>
+                        <td>Rotulos</td>
+                        <td>20</td>
+                        <td style="color: var(--accent-yellow);"><strong>40%</strong></td>
+                        <td style="text-align: left;">En Proceso <span class="dot dot-yellow"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>P06</strong></td>
+                        <td class="icon-col">📦</td>
+                        <td style="text-align: left;"><strong>Localización piking</strong></td>
+                        <td style="text-align: left;">Inventario por ubicaciones</td>
+                        <td>30,000</td>
+                        <td>ubicaciones</td>
+                        <td>0</td>
+                        <td style="color: var(--accent-red);"><strong>0%</strong></td>
+                        <td style="text-align: left;">En desarrollo. <span class="dot dot-red"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="sheet">
+        <div class="content" style="padding: 15px;">
+            <h3>AVANCE GLOBAL POR PROYECTO</h3>
+            <h4 style="margin-top: 0; margin-bottom: 20px; color: var(--text-dark); font-size: 13px; font-weight: 500;">Comparativo de Ejecución</h4>
+            
+            <div class="global-progress-item">
+                <div class="global-progress-header">
+                    <span>P01 - Localización almacen</span><span style="color: var(--accent-green);">92%</span>
+                </div>
+                <div class="global-progress-bar-container">
+                    <div class="global-progress-fill" style="width: 92%; background: var(--accent-green);"></div>
+                </div>
+            </div>
+
+            <div class="global-progress-item">
+                <div class="global-progress-header">
+                    <span>P02 - Pintura Pasillos</span>
+                    <span style="color: var(--p02-blue);">40%</span>
+                </div>
+                <div class="global-progress-bar-container">
+                    <div class="global-progress-fill" style="width: 40%; background: var(--p02-blue);"></div>
+                </div>
+            </div>
+
+            <div class="global-progress-item">
+                <div class="global-progress-header">
+                    <span>P03 - Pintura delimitacion</span><span style="color: var(--accent-green);">98%</span>
+                </div>
+                <div class="global-progress-bar-container">
+                    <div class="global-progress-fill" style="width: 98%; background: var(--accent-green);"></div>
+                </div>
+            </div>
+
+            <div class="global-progress-item">
+                <div class="global-progress-header">
+                    <span>P04 - Extintores</span><span style="color: var(--accent-yellow);">56%</span>
+                </div>
+                <div class="global-progress-bar-container">
+                    <div class="global-progress-fill" style="width: 56%; background: var(--accent-yellow);"></div>
+                </div>
+            </div>
+
+            <div class="global-progress-item">
+                <div class="global-progress-header">
+                    <span>P05 - Rotulcion de areas</span><span style="color: var(--accent-yellow);">40%</span>
+                </div>
+                <div class="global-progress-bar-container">
+                    <div class="global-progress-fill" style="width: 40%; background: var(--accent-yellow);"></div>
+                </div>
+            </div>
+
+            <div class="global-progress-item">
+                <div class="global-progress-header">
+                    <span>P06 - Localización piking</span><span style="color: var(--accent-red);">0%</span>
+                </div>
+                <div class="global-progress-bar-container">
+                    <div class="global-progress-fill" style="width: 0%; background: var(--accent-red);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sheet">
+        <div class="content">
+            <h3 style="color: var(--accent-red);">BLOQUEADORES Y CAUSAS</h3>
+            
+            <div class="blocker-item">
+                <div class="icon-circle">🛒</div>
+                <div style="flex-grow: 1;">
+                    <div style="display:flex; justify-content: space-between;">
+                        <strong style="color: var(--secondary-blue); font-size:12px;">Falta de Material</strong>
+                        <span class="badge-red">Alto</span>
+                    </div>
+                    <div style="margin: 3px 0; font-weight:500;">Retraso en entrega de pintura epóxica por proveedor</div>
+                    <div style="font-size: 10px; color: #4B5563;"><strong>Afecta:</strong> Pintura, Delimitacion</div>
+                </div>
+            </div>
+
+            <div class="blocker-item">
+                <div class="icon-circle">👥</div>
+                <div style="flex-grow: 1;">
+                    <div style="display:flex; justify-content: space-between;">
+                        <strong style="color: var(--secondary-blue); font-size:12px;">Personal Insuficiente</strong>
+                        <span class="badge-red">Alto</span>
+                    </div>
+                    <div style="margin: 3px 0; font-weight:500;">Cuadrillas limitadas por alto flujo de contenedores</div>
+                    <div style="font-size: 10px; color: #4B5563;"><strong>Afecta:</strong> Todos</div>
+                </div>
+            </div>
+
+            <div class="blocker-item">
+                <div class="icon-circle">🕒</div>
+                <div style="flex-grow: 1;">
+                    <div style="display:flex; justify-content: space-between;">
+                        <strong style="color: var(--secondary-blue); font-size:12px;">Operación Activa</strong>
+                        <span class="badge-yellow">Medio</span>
+                    </div>
+                    <div style="margin: 3px 0; font-weight:500;">Despacho y Distribución no tienen ventanas de parada</div>
+                    <div style="font-size: 10px; color: #4B5563;"><strong>Afecta:</strong> Pintura, Delimitacion</div>
+                </div>
+            </div>
+
+            <div class="blocker-item">
+                <div class="icon-circle">⚙️</div>
+                <div style="flex-grow: 1;">
+                    <div style="display:flex; justify-content: space-between;">
+                        <strong style="color: var(--secondary-blue); font-size:12px;">Pendiente Desarrollo</strong>
+                        <span class="badge-red">Alto</span>
+                    </div>
+                    <div style="margin: 3px 0; font-weight:500;">Depto De desarrollo aun no entrega la modificacion</div>
+                    <div style="font-size: 10px; color: #4B5563;"><strong>Afecta:</strong> Ubicación Piking</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sheet">
+        <div class="content">
+            <h3 style="color: var(--secondary-blue);">PRÓXIMOS PASOS</h3>
+            <table style="text-align: left; font-size:10px; margin-bottom: 20px;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Accion Correctiva</th>
+                        <th style="text-align: left;">Proyecto</th>
+                        <th style="text-align: left;">Responsable</th>
+                        <th style="text-align: left;">Fecha Límite</th>
+                        <th>Prioridad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align: left; font-weight:500;">Solicitar reposición de materiales</td>
+                        <td style="text-align: left;">General</td>
+                        <td style="text-align: left;">Abel Ortiz</td>
+                        <td style="text-align: left;">30/4/2026</td>
+                        <td style="text-align:center;"><span class="badge-red">ALTA</span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight:500;">Pintura de pasillos turno nocturno</td>
+                        <td style="text-align: left;">Pintura</td>
+                        <td style="text-align: left;">Equipo Entradas</td>
+                        <td style="text-align: left;">30/4/2026</td>
+                        <td style="text-align:center;"><span class="badge-red">ALTA</span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight:500;">Cierre de localización Área A</td>
+                        <td style="text-align: left;">Localización</td>
+                        <td style="text-align: left;">Equipo Entradas</td>
+                        <td style="text-align: left;">30/4/2026</td>
+                        <td style="text-align:center;"><span class="badge-yellow">MEDIA</span></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; font-weight:500;">Solicitar a desarrollo apartado</td>
+                        <td style="text-align: left;">Localización</td>
+                        <td style="text-align: left;">Equipo Entradas</td>
+                        <td style="text-align: left;">Pendiente</td>
+                        <td style="text-align:center;"><span class="badge-red">ALTA</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 15px; padding: 12px; background: #F3F4F6; border-radius: 8px; border-left: 5px solid var(--primary-blue);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 28px;">🎯</div>
+                    <div>
+                        <strong style="font-size: 13px; color:#1F2937;">Objetivo General</strong><br>
+                        <span style="font-size:11px; color:#4B5563;">Completar el 100% de los proyectos garantizando seguridad, orden y cumplimiento de estándares operativos del CEDI.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
